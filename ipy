@@ -1,0 +1,422 @@
+#!/usr/bin/env python3
+
+################################################################################
+#                                                                              #
+# Copyright (C) 2024 Brunk (IDIRI Anas)                                        #
+#                                                                              #
+# IPy v1.2  - Simple tool to manage IP on linux                                #
+#                                                                              #
+#                                                                              #
+#                                                                              #
+# GNU GENERAL PUBLIC LICENSE                                                   #
+#                                                                              #
+# This program is free software: you can redistribute it and/or modify         #
+# it under the terms of the GNU General Public License as published by         #
+# the Free Software Foundation, either version 3 of the License, or            #
+# (at your option) any later version.                                          #
+#                                                                              #
+# This program is distributed in the hope that it will be useful,              #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of               #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                #
+# GNU General Public License for more details.                                 #
+#                                                                              #
+# You should have received a copy of the GNU General Public License            #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.        #
+#                                                                              #
+################################################################################
+    
+
+from os import popen, system
+from sys import argv
+
+
+try:
+    from questionary import select
+except ModuleNotFoundError:
+    system("pip install questionary > /dev/null")
+    from questionary import select
+
+
+# Si vous n'avez pas sudo commentez cette ligne :
+use_sudo = "sudo"
+# Et décommentez celle-ci :
+# use_sudo = ""
+
+
+
+"""
+    Classe permettant d'afficher du texte en couleur
+"""
+class log:
+    def blue(text: str) -> str:
+        return f"\x1b[34m{text}\x1b[0m"
+
+    def cyan(text: str) -> str:
+        return f"\x1b[36m{text}\x1b[0m"
+
+    def purple_without_end(text: str) -> str:
+        return f"\x1b[35m{text}"
+
+    def purple(text: str) -> str:
+        return f"\x1b[35m{text}\x1b[0m"
+
+    def orange(text: str) -> str:
+        return f"\x1b[33m{text}\x1b[0m"
+
+
+
+# 1:-1 -> Enlève le premier élément (loopback interface) et le dernier (le \n)
+ALL_INTERFACES: list = popen('ip link show | grep "^[0-9]*: .*:" -Eo | grep -Eo " .*:"').read().replace(":", "").replace(" ", "").split("\n")[1:-1]
+
+
+
+"""
+    Afficher un message d'aide différent en fonction du code passé en paramètre
+"""
+def help_msg(code = 1) -> None:
+    if code == 1:
+        print(f"""
+{log.cyan("Usage:")} {log.orange(argv[0])} ({log.blue("show")}|{log.blue("config")})
+
+    {log.blue("show:")}      Show informations about IP or Routing
+    {log.blue("config:")}    Configure IP  """)
+
+
+    elif code == 2:
+        print(f"""
+{log.cyan("Usage:")} {log.orange(argv[0] + " s")} ({log.blue("ip")}|{log.blue("route")})
+
+    {log.blue("ip:")}       Show informations about IP
+    {log.blue("route:")}    Show informations about Routing""")
+
+
+    elif code == 3:
+        print(f"""
+{log.cyan("Usage:")} {log.orange(argv[0] + " s i")} [{log.blue("INAME")}] [{log.blue("-6")}]
+
+    {log.blue("Examples:")}
+        {log.orange("ip s i:")}             IPv4 with interactive mode 
+        {log.orange("ip s i -6:")}          IPv4 & IPv6 with interactive mode
+    
+        {log.orange("ip s i wlo1:")}        IPv4 of wlo1
+        {log.orange("ip s i wlo1 -6:")}     IPv4 & IPv6 of wlo1""")
+
+
+    elif code == 4:
+            print(f"""
+{log.cyan("Usage:")} {log.orange(argv[0] + " c")} ({log.blue("ip")}|{log.blue("route")})
+
+    {log.blue("ip:")}       Configure IP
+    {log.blue("route:")}    Configure Routing""")
+
+
+    elif code == 5:
+        print(f"""
+{log.cyan("Usage:")} {log.orange(argv[0] + " " + argv[2][0])} [{log.blue("INAME")}] """)
+
+
+
+"""
+    Couche d'abstraction permettant de facilement remplacer popen par subprocess par exemple
+"""
+def exec(cmd: str) -> str:
+    return popen(cmd).read().strip()
+
+
+
+"""
+    Affiche l'adresse MAC, les adresses ipv4 et, éventuellement, les adresses ipv6
+    d'une interface joliment.
+"""
+def show_interface(interface: str, show_ipv6: bool) -> None:
+    
+    # On vérifie que l'interface existe
+    if(not interface in ALL_INTERFACES):
+        help_msg(3)
+        quit()
+
+    # On recupère l'adresse MAC
+    mac_addr: str = exec(f"ip a s {interface} | grep -Eo '..:..:..:..:..:..' | head -1")
+    
+    # On recupère les différentes adresses IPv4
+    ip: str = exec(f"ip a s {interface} | grep -Eo 'inet .*/..'").replace("inet ", "")
+
+    # On affiche joliment l'adresse MAC
+    print(log.orange("\n+-------- MAC --------+"), 
+          log.orange("\n|  ") + log.cyan(mac_addr) + log.orange("  |"),
+          log.orange("\n+---------------------+") + "\n")
+
+    # Et on affiche les IPv4 dans une sorte de tableau
+    print(log.orange("+-------- IPv4 --------+"))
+    for my_ip in ip.split():
+        print(log.orange("|") + my_ip.center(22).replace("/", log.purple_without_end("/")) + log.orange("|"))
+    print(log.orange("+----------------------+"))
+    
+    # On affiche éventuellement les ipv6
+    if(len(argv) >= 5 and argv[4] in ["6", "-6"] or show_ipv6):
+        # On recupère les adresses ipv6 sous forme d'une chaine de caractères
+        ipv6: str = exec(f"ip a s {interface} | grep -Eo 'inet6 .*/...'").replace("inet6 ", "")
+        # Et on l'affiche
+        print("\n" + ipv6.replace("/", log.purple_without_end("/")))
+
+
+
+"""
+    Affiche les routes (NETWORK ADDR/MASK   Gateway     Interface) joliment
+"""
+def show_route():
+    print(log.orange("\nDestination         Gateway           Interface"))
+
+    routes = exec('route -n | grep -Eo "([0-9]*\.){3}[0-9]"').split("\n")
+    interfaces = exec('route -n | grep " [A-Za-z0-9]*$" -o').split(" ")[2:]
+
+    for i in range(0, len(routes), 3):
+        list_mask = routes[i+2].split(".") 
+        processing = list()
+        for octet in list_mask:
+            processing.append(str(bin(int(octet))).count("1")) 
+
+        mask = str(sum(processing))
+
+        print(
+            routes[i] + 
+            log.purple("/" + mask) + 
+            " " * (20 - len(routes[i] + "/" + mask)) + 
+            log.cyan(routes[i+1]) + 
+            " " * (18 - len(routes[i+1])) +
+            interfaces[int(i/3)].strip().center(8),
+        )
+
+
+
+"""
+    Fonction qui donne un prompt à l'utilisateur pour qu'il puisse configurer ses ipv4/v6 facilement 
+"""
+def ip_config(interface: str):
+    try:
+        while True:
+            # On affiche le prompt "iname (ip) > " en couleur
+            print(log.orange(interface) + log.blue(" (ip)") + " > ", end="")
+            # On recupère l'entrée utilisateur qu'on split
+            command_ip: str = input().split()
+
+            # Si on ne fait pas ca on a une erreur si l'utilisateur tape "entré"
+            # sans mettre de texte
+            try:
+                command = command_ip[0]
+            except IndexError:
+                continue
+
+            # On affiche un message d'aide sommaire
+            if command in [ "h", "help", "ls"]:
+                print(f"""{ log.cyan("add") }, { log.cyan("del") }, { log.cyan("up") }, { log.cyan("down") }""")
+
+            # Si add commence par la commande entrée par l'utilisateur -> si un utilisateur entre a
+            # add commence par a, donc on rentre dans le if  
+            elif "add".startswith(command):
+                if(len(command_ip) == 2):
+                    system(use_sudo + " ip addr add " + command_ip[1] + " dev " + interface)
+                    print("OK")
+                else:
+                    print("ERROR")
+            
+            # Si del commence par la commande entrée par l'utilisateur -> si un utilisateur entre d
+            # del commence par d, donc on rentre dans le if
+            elif "del".startswith(command):
+                if(len(command_ip) == 2):
+                    system(use_sudo + " ip addr del " + command_ip[1] + " dev " + interface)
+                    print("OK")
+                else:
+                    print("ERROR")
+
+            # Permet de UP ou de DOWN une interface aisément
+            elif command == "up":
+                system(f"{use_sudo} ip link set {interface} up")
+                print("OK")
+
+            elif command == "down":
+                system(f"{use_sudo} ip link set {interface} down")
+                print("OK")
+            
+    except KeyboardInterrupt:
+        quit()
+
+
+
+"""
+    Configuration des routes
+"""
+def route_config(interface: str):
+    try:
+        while True:
+
+            # On affiche le prompt "iname (route) > " en couleur
+            print(log.orange(interface) + log.blue(" (route)") + " > ", end="")
+
+            # On recupère l'entrée utilisateur qu'on splt
+            command_ip: str = input().split()
+
+            # Si on ne fait pas ca on a une erreur si l'utilisateur tape "entré"
+            # sans mettre de texte
+            try:
+                command = command_ip[0]
+            except IndexError:
+                continue
+
+            # On affiche un message d'aide sommaire
+            if command in [ "h", "help", "ls"]:
+                print(f"""{ log.cyan("add") }, { log.cyan("del") }""")
+
+            # Si add commence par la commande entrée par l'utilisateur -> si un utilisateur entre a
+            # add commence par a, donc on rentre dans le if  
+            elif "add".startswith(command):
+                if(len(command_ip) == 3):
+                    system(use_sudo + " ip route add " + command_ip[1] + " via " + command_ip[2] + " dev " + interface)
+                    print("OK")
+                else:
+                    print("ERROR")
+            
+
+            # Si add commence par la commande entrée par l'utilisateur -> si un utilisateur entre d
+            # del commence par d, donc on rentre dans le if 
+            elif "del".startswith(command):
+                if(len(command_ip) == 2):
+                    system(use_sudo + " ip route del " + command_ip[1])
+                    print("OK")
+                else:
+                    print("ERROR")           
+
+    except KeyboardInterrupt:
+        quit()
+
+
+
+"""
+    Permet la bonne gestion du mode de configuration
+"""
+def configure():
+    # Il nous faut minimum 2 argument (argv[0] = nom du programme, donc on veut bien avoir une len supérieure à 3 et pas à 2) 
+    # configure qui indique que nous sommes en mode config et ip | route qui nous indique ce que l'on souhaite configurer
+    if len(argv) >= 3:
+
+        # Si on a un argument en plus, on en déduit que c'est l'interface
+        # que l'utilisateur souhaite configurer
+        if len(argv) >= 4:
+            interface = argv[3]
+            
+            # Sanity check
+            if(interface not in ALL_INTERFACES):
+                help_msg(5)
+                quit()
+        
+        # Sinon on demande interactivement à l'utilisateur de choisir l'interface à configurer
+        else:
+            interface: str = select(
+                "",
+                qmark = "",
+                instruction = " ",
+                choices = ALL_INTERFACES
+            ).ask()
+
+        # Si le questionary.select() a été controle C (sanity check)
+        if(interface == None):
+            quit()
+
+        # On map les bonnes fonctions aux bonnes entrées utilisateur, et on leur passe l'interface
+        if("ip".startswith(argv[2])):
+            ip_config(interface)
+
+        elif("route".startswith(argv[2])):
+            route_config(interface)
+        
+        # Si l'utilisateur n'essaye de configurer ni l'ip ni les route, on affiche un message d'aide
+        else:
+            help_msg(4)
+
+    # Si il manque des arguments, nous affichons un message d'aide
+    else:
+        help_msg(4)
+
+
+
+"""
+    Gère la bonne gestion de l'appel au fonction d'affichage des ipv4, ipv6 et route
+"""
+def show_information():
+    # Il nous faut minimum 2 arguments (argv[0] = nom du programme, donc on veut bien avoir une len supérieure à 3 et pas à 2)
+    # show qui indique que nous sommes en mode affichage, et ip | route qui nous indique ce que l'on souhaite afficher
+    if len(argv) >= 3:
+
+        # Si c'est l'ip que l'on souhaite afficher
+        if "ip".startswith(argv[2].lower()):
+
+            # On vérifie si on veut afficher l'ipv6 ou que l'ipv4, et si on passe l'interface en CLI ou si
+            # on doit utiliser le mode interactif pour la récuperer
+            if len(argv) <= 3 or argv[3] in ["-6", "6"]:
+                action: str = select(
+                    "",
+                    qmark = "",
+                    instruction = " ",
+                    choices = ALL_INTERFACES
+                ).ask()
+
+                # Si le questionary.select() a été controle C (sanity check)
+                if(action == None):
+                    quit()
+
+
+                if(len(argv) >= 4):
+                    ipv6 = argv[3] in ["-6", "6"]
+                else:
+                    ipv6 = False
+
+                show_interface(action, ipv6)
+
+            else:
+                show_interface(argv[3], False)
+        
+        # Sinon si c'est la route que l'on souhaite afficher
+        elif "route".startswith(argv[2].lower()):
+            show_route()
+
+        # Enfin, si l'utilisateur ne tente ni d'afficher les routes ni l'ip, on affiche un message d'aide
+        else:
+            help_msg(2)
+            quit()
+
+    # Si il manque des arguments, nous affichons un message d'aide
+    else:
+        help_msg(2)
+        return 
+
+
+
+"""
+    Main fonction
+"""
+def main() -> None:
+    # Il nous faut OBLIGATOIREMENT plus d'un argument, car ./ipy seul n'est pas suffisant pour que nous comprenions
+    # ce que nous devons faire
+
+    if len(argv) > 1:
+        # Sinon si c'est une demande d'affichage
+        if "show".startswith(argv[1].lower()):
+            show_information()
+
+        # Sinon si c'est une demande de configuration
+        elif "configure".startswith(argv[1].lower()):
+            configure()
+        
+        # Si ce n'est ni demande de config ni demande d'affichage
+        else:
+            help_msg()
+    
+    # Si l'utilisateur n'a passé aucun argument
+    else:
+        help_msg()
+    
+
+
+# Si ce n'est pas loadé comme module, mais executé comme script
+if __name__ == "__main__":
+    main()
