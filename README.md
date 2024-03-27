@@ -39,7 +39,7 @@ All notable changes to this project will be documented in this file.
 ```bash
 # [1.0] - 27 mars 2024
 - First commit
-- Show IP of a specific interface
+- Show IP (v4 and v6) of a specific interface
 - Show all routes
 - Configure an interface (UP, DOWN, ADD/DEL IP)
 - Configure routes (ADD/DEL)
