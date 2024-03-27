@@ -1,6 +1,6 @@
 <div align="center">
 
-# FTPy 
+# IPy 
 <img src="https://readme-typing-svg.demolab.com?font=Iosevka+Nerd+Font&weight=900&pause=1000&color=6791C9&background=0C0E0F00&center=true&vCenter=true&width=700&lines=GNU%2FLinux+network+configuration+tool+written+in+python">
 <br/>  
   
@@ -9,7 +9,6 @@
 ![repo size](https://img.shields.io/github/repo-size/NullBrunk/IPy?style=for-the-badge)
 </div>
 
-![ftpydemo](https://github.com/NullBrunk/FTPy/assets/125673909/ebe09f66-622a-4d32-b26d-d1b3176d556f)
 
 
 # 📖 Changelog
