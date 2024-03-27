@@ -9,7 +9,12 @@
 ![repo size](https://img.shields.io/github/repo-size/NullBrunk/IPy?style=for-the-badge)
 </div>
 
+# 💻 Usage 
+![show_mode](https://github.com/NullBrunk/IPy/assets/125673909/a153077c-3768-4233-99cb-1570efd3d758)
 
+![config_mode_ip](https://github.com/NullBrunk/IPy/assets/125673909/50fc80c2-4d92-46d3-876e-fdb17f904546)
+
+![config_mode_route](https://github.com/NullBrunk/IPy/assets/125673909/874cba57-2453-400b-865a-1b232dfae5dc)
 
 # 📖 Changelog
 
