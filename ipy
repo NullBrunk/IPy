@@ -48,32 +48,37 @@ use_sudo = "sudo"
     Classe permettant d'afficher du texte en couleur
 """
 class log:
-    def blue(text: str) -> str:
+    def blue(text):
         return f"\x1b[34m{text}\x1b[0m"
 
-    def cyan(text: str) -> str:
+    def cyan(text):
         return f"\x1b[36m{text}\x1b[0m"
 
-    def purple_without_end(text: str) -> str:
+    def purple_without_end(text):
         return f"\x1b[35m{text}"
 
-    def purple(text: str) -> str:
+    def purple(text):
         return f"\x1b[35m{text}\x1b[0m"
 
-    def orange(text: str) -> str:
+    def orange(text):
         return f"\x1b[33m{text}\x1b[0m"
 
 
 
 # 1:-1 -> Enlève le premier élément (loopback interface) et le dernier (le \n)
-ALL_INTERFACES: list = popen('ip link show | grep "^[0-9]*: .*:" -Eo | grep -Eo " .*:"').read().replace(":", "").replace(" ", "").split("\n")[1:-1]
+ALL_INTERFACES = popen('ip link show | grep "^[0-9]*: .*:" -Eo | grep -Eo " .*:"').read().replace(":", "").replace(" ", "").split("\n")[1:-1]
 
 
 
 """
     Afficher un message d'aide différent en fonction du code passé en paramètre
+
+
+    @param int code     Entier positif compris entre 1 et 6
+
+    @return None    Fonction de type void
 """
-def help_msg(code = 1) -> None:
+def help_msg(code = 1):
     if code == 1:
         print(f"""
 {log.cyan("Usage:")} {log.orange(argv[0])} ({log.blue("show")}|{log.blue("config")})
@@ -118,8 +123,13 @@ def help_msg(code = 1) -> None:
 
 """
     Couche d'abstraction permettant de facilement remplacer popen par subprocess par exemple
+
+
+    @param str cmd     Commande a executer
+
+    @return str    Résultat de la commande executée
 """
-def exec(cmd: str) -> str:
+def exec(cmd):
     return popen(cmd).read().strip()
 
 
@@ -127,8 +137,14 @@ def exec(cmd: str) -> str:
 """
     Affiche l'adresse MAC, les adresses ipv4 et, éventuellement, les adresses ipv6
     d'une interface joliment.
+
+
+    @param str interface     L'interface à afficher
+    @param bool show_ipv6    Booléent indiquant si il faut ou non afficher les ipv6
+
+    @return None    Fonction de type void
 """
-def show_interface(interface: str, show_ipv6: bool) -> None:
+def show_interface(interface, show_ipv6):
     
     # On vérifie que l'interface existe
     if(not interface in ALL_INTERFACES):
@@ -136,10 +152,10 @@ def show_interface(interface: str, show_ipv6: bool) -> None:
         quit()
 
     # On recupère l'adresse MAC
-    mac_addr: str = exec(f"ip a s {interface} | grep -Eo '..:..:..:..:..:..' | head -1")
+    mac_addr = exec(f"ip a s {interface} | grep -Eo '..:..:..:..:..:..' | head -1")
     
     # On recupère les différentes adresses IPv4
-    ip: str = exec(f"ip a s {interface} | grep -Eo 'inet .*/..'").replace("inet ", "")
+    ip = exec(f"ip a s {interface} | grep -Eo 'inet .*/..'").replace("inet ", "")
 
     # On affiche joliment l'adresse MAC
     print(log.orange("\n+-------- MAC --------+"), 
@@ -155,7 +171,7 @@ def show_interface(interface: str, show_ipv6: bool) -> None:
     # On affiche éventuellement les ipv6
     if(len(argv) >= 5 and argv[4] in ["6", "-6"] or show_ipv6):
         # On recupère les adresses ipv6 sous forme d'une chaine de caractères
-        ipv6: str = exec(f"ip a s {interface} | grep -Eo 'inet6 .*/...'").replace("inet6 ", "")
+        ipv6 = exec(f"ip a s {interface} | grep -Eo 'inet6 .*/...'").replace("inet6 ", "")
         # Et on l'affiche
         print("\n" + ipv6.replace("/", log.purple_without_end("/")))
 
@@ -163,6 +179,8 @@ def show_interface(interface: str, show_ipv6: bool) -> None:
 
 """
     Affiche les routes (NETWORK ADDR/MASK   Gateway     Interface) joliment
+
+    @return None    Fonction de type void
 """
 def show_route():
     print(log.orange("\nDestination         Gateway           Interface"))
@@ -191,14 +209,19 @@ def show_route():
 
 """
     Fonction qui donne un prompt à l'utilisateur pour qu'il puisse configurer ses ipv4/v6 facilement 
+
+
+    @param str interface     L'interface à configurer
+
+    @return None    Fonction de type void
 """
-def ip_config(interface: str):
+def ip_config(interface):
     try:
         while True:
             # On affiche le prompt "iname (ip) > " en couleur
             print(log.orange(interface) + log.blue(" (ip)") + " > ", end="")
             # On recupère l'entrée utilisateur qu'on split
-            command_ip: str = input().split()
+            command_ip = input().split()
 
             # Si on ne fait pas ca on a une erreur si l'utilisateur tape "entré"
             # sans mettre de texte
@@ -245,8 +268,12 @@ def ip_config(interface: str):
 
 """
     Configuration des routes
+
+    @param str interface     L'interface à configurer
+
+    @return None    Fonction de type void
 """
-def route_config(interface: str):
+def route_config(interface):
     try:
         while True:
 
@@ -254,7 +281,7 @@ def route_config(interface: str):
             print(log.orange(interface) + log.blue(" (route)") + " > ", end="")
 
             # On recupère l'entrée utilisateur qu'on splt
-            command_ip: str = input().split()
+            command_ip = input().split()
 
             # Si on ne fait pas ca on a une erreur si l'utilisateur tape "entré"
             # sans mettre de texte
@@ -293,6 +320,8 @@ def route_config(interface: str):
 
 """
     Permet la bonne gestion du mode de configuration
+
+    @return None    Fonction de type void
 """
 def configure():
     # Il nous faut minimum 2 argument (argv[0] = nom du programme, donc on veut bien avoir une len supérieure à 3 et pas à 2) 
@@ -311,7 +340,7 @@ def configure():
         
         # Sinon on demande interactivement à l'utilisateur de choisir l'interface à configurer
         else:
-            interface: str = select(
+            interface = select(
                 "",
                 qmark = "",
                 instruction = " ",
@@ -341,6 +370,8 @@ def configure():
 
 """
     Gère la bonne gestion de l'appel au fonction d'affichage des ipv4, ipv6 et route
+
+    @return None    Fonction de type void
 """
 def show_information():
     # Il nous faut minimum 2 arguments (argv[0] = nom du programme, donc on veut bien avoir une len supérieure à 3 et pas à 2)
@@ -353,7 +384,7 @@ def show_information():
             # On vérifie si on veut afficher l'ipv6 ou que l'ipv4, et si on passe l'interface en CLI ou si
             # on doit utiliser le mode interactif pour la récuperer
             if len(argv) <= 3 or argv[3] in ["-6", "6"]:
-                action: str = select(
+                action = select(
                     "",
                     qmark = "",
                     instruction = " ",
@@ -393,8 +424,10 @@ def show_information():
 
 """
     Main fonction
+
+    @return bool    
 """
-def main() -> None:
+def main():
     # Il nous faut OBLIGATOIREMENT plus d'un argument, car ./ipy seul n'est pas suffisant pour que nous comprenions
     # ce que nous devons faire
 
@@ -415,7 +448,7 @@ def main() -> None:
     else:
         help_msg()
     
-
+    return True
 
 # Si ce n'est pas loadé comme module, mais executé comme script
 if __name__ == "__main__":
