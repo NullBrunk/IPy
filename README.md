@@ -45,6 +45,12 @@ All notable changes to this project will be documented in this file.
 - Show all routes
 - Configure an interface (UP, DOWN, ADD/DEL IP)
 - Configure routes (ADD/DEL)
+
+# [1.1] - 28 mars 2024
+- Refactored ALL_INTERFACES + display_interface() with netifaces
+- Added netifaces to the requirements
+- General graphical improvement
+- Refactored the log class
 ```
  
 # ⚒️ Installation
