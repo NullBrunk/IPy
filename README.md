@@ -8,6 +8,9 @@
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/NullBrunk/IPy?style=for-the-badge)
 ![repo size](https://img.shields.io/github/repo-size/NullBrunk/IPy?style=for-the-badge)
 
+![image](https://github.com/NullBrunk/IPy/assets/125673909/b7a577a4-76fb-485d-a33e-7e31c3642f6e)
+
+
 </div>
 
 # 💻 Usage 
