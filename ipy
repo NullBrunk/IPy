@@ -197,6 +197,7 @@ def display_interface(interface, show_ipv6):
             ipv6 = ipv6_address['addr'].split("%")[0] + prefix
             # On colorize après avoir centré, car colorizer ajoute des caractères que center() tentera de centrer aussi
             print(log.colorize("| ") + ipv6.center(42).replace(prefix, log.colorize(prefix, "purple")) + log.colorize(" |"))
+            
         print(log.colorize("+--------------------------------------------+\n"))
 
 
