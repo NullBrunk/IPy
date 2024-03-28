@@ -8,28 +8,28 @@
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/NullBrunk/IPy?style=for-the-badge)
 ![repo size](https://img.shields.io/github/repo-size/NullBrunk/IPy?style=for-the-badge)
 
-![image](https://github.com/NullBrunk/IPy/assets/125673909/fac4f41a-62c3-44b5-a056-91e8c3a172c1)
-
 </div>
 
 # 💻 Usage 
 
-### Show mode
+### Show mode : IP
 This mode allows you to display several informations about a given interface. You can pass the interface in CLI, or select it in a list of all your interfaces in interactive mode. 
+![show_mode_ip](https://github.com/NullBrunk/IPy/assets/125673909/5da86a4c-cdb0-414c-8aa6-d873ca4e5cde)
 
-![show_mode](https://github.com/NullBrunk/IPy/assets/125673909/a153077c-3768-4233-99cb-1570efd3d758)
+### Show mode : ROUTE
+This mode allows you to display the routes in a nice format
+![image](https://github.com/NullBrunk/IPy/assets/125673909/ce1d2c97-02ec-4780-a132-d9c23efc34c2)
+
 
 
 ### Config mode : IP
 This mode allows you to UP, DOWN, ADD an ip, DEL an IP on a given interface. You can pass the interface in CLI, or select it in a list of all your interfaces in interactive mode 
-
-![config_mode_ip](https://github.com/NullBrunk/IPy/assets/125673909/50fc80c2-4d92-46d3-876e-fdb17f904546)
+![config_mode_ip](https://github.com/NullBrunk/IPy/assets/125673909/940bca59-5797-4fc9-a9c2-1843a10ba855)
 
 
 ### Config mode : ROUTE
 This mode allows you to ADD or DEL a Route on a given interface. You can pass the interface in CLI, or select it in a list of all your interfaces in interactive mode 
-
-![config_mode_route](https://github.com/NullBrunk/IPy/assets/125673909/874cba57-2453-400b-865a-1b232dfae5dc)
+![route_mode](https://github.com/NullBrunk/IPy/assets/125673909/9ff3bd4b-42d8-4efc-a0c4-b5a4f1b976ea)
 
 
 # 📖 Changelog
