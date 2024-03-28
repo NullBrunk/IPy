@@ -26,16 +26,11 @@
 ################################################################################
     
 
+from questionary import select
 from os import popen, system
 from sys import argv
-
-
-try:
-    from questionary import select
-except ModuleNotFoundError:
-    system("pip install questionary > /dev/null")
-    from questionary import select
-
+import netifaces
+import socket
 
 # Si vous n'avez pas sudo commentez cette ligne :
 use_sudo = "sudo"
@@ -48,25 +43,44 @@ use_sudo = "sudo"
     Classe permettant d'afficher du texte en couleur
 """
 class log:
-    def blue(text):
-        return f"\x1b[34m{text}\x1b[0m"
 
-    def cyan(text):
-        return f"\x1b[36m{text}\x1b[0m"
+    def colorize(text, color = "orange"):
+        if(color not in ["blue", "orange", "cyan", "purple"]):
+            # WHITE COLOR CODE
+            code = "97"
+        
+        if color == "orange":
+            code = "33"
+        elif color == "blue":
+            code = "34"
+        elif color == "cyan":
+            code = "36"
+        elif color == "purple":
+            code = "35"
 
-    def purple_without_end(text):
-        return f"\x1b[35m{text}"
+        return f"\x1b[{code}m{text}\x1b[0m"
 
-    def purple(text):
-        return f"\x1b[35m{text}\x1b[0m"
 
-    def orange(text):
-        return f"\x1b[33m{text}\x1b[0m"
+
+"""
+    Convert a Mask (example 255.255.255.0) to his CIDR notation (example /24)
+
+    @param str mask     The mask
+
+    @param str mask     The mask in CIDR notation 
+"""
+def get_cidr_notation(mask):
+    list_mask = mask.split(".") 
+    processing = list()
+    for octet in list_mask:
+        processing.append(str(bin(int(octet))).count("1")) 
+
+    return str(sum(processing))
 
 
 
 # 1:-1 -> Enlève le premier élément (loopback interface) et le dernier (le \n)
-ALL_INTERFACES = popen('ip link show | grep "^[0-9]*: .*:" -Eo | grep -Eo " .*:"').read().replace(":", "").replace(" ", "").split("\n")[1:-1]
+ALL_INTERFACES = netifaces.interfaces()
 
 
 
@@ -81,43 +95,43 @@ ALL_INTERFACES = popen('ip link show | grep "^[0-9]*: .*:" -Eo | grep -Eo " .*:"
 def help_msg(code = 1):
     if code == 1:
         print(f"""
-{log.cyan("Usage:")} {log.orange(argv[0])} ({log.blue("show")}|{log.blue("config")})
+{log.colorize("Usage:", "cyan")} {log.colorize(argv[0])} ({log.colorize("show", "blue")}|{log.colorize("config", "blue")})
 
-    {log.blue("show:")}      Show informations about IP or Routing
-    {log.blue("config:")}    Configure IP  """)
+    {log.colorize("show:", "blue")}      Show informations about IP or Routing
+    {log.colorize("config:", "blue")}    Configure IP  """)
 
 
     elif code == 2:
         print(f"""
-{log.cyan("Usage:")} {log.orange(argv[0] + " s")} ({log.blue("ip")}|{log.blue("route")})
+{log.colorize("Usage:", "cyan")} {log.colorize(argv[0] + " s")} ({log.colorize("ip", "blue")}|{log.colorize("route", "blue")})
 
-    {log.blue("ip:")}       Show informations about IP
-    {log.blue("route:")}    Show informations about Routing""")
+    {log.colorize("ip:", "blue")}       Show informations about IP
+    {log.colorize("route:", "blue")}    Show informations about Routing""")
 
 
     elif code == 3:
         print(f"""
-{log.cyan("Usage:")} {log.orange(argv[0] + " s i")} [{log.blue("INAME")}] [{log.blue("-6")}]
+{log.colorize("Usage:", "cyan")} {log.colorize(argv[0] + " s i",)} [{log.colorize("INAME", "blue")}] [{log.colorize("-6", "blue")}]
 
-    {log.blue("Examples:")}
-        {log.orange("ip s i:")}             IPv4 with interactive mode 
-        {log.orange("ip s i -6:")}          IPv4 & IPv6 with interactive mode
+    {log.colorize("Examples:", "blue")}
+        {log.colorize("ip s i:")}             IPv4 with interactive mode 
+        {log.colorize("ip s i -6:")}          IPv4 & IPv6 with interactive mode
     
-        {log.orange("ip s i wlo1:")}        IPv4 of wlo1
-        {log.orange("ip s i wlo1 -6:")}     IPv4 & IPv6 of wlo1""")
+        {log.colorize("ip s i wlo1:")}        IPv4 of wlo1
+        {log.colorize("ip s i wlo1 -6:")}     IPv4 & IPv6 of wlo1""")
 
 
     elif code == 4:
             print(f"""
-{log.cyan("Usage:")} {log.orange(argv[0] + " c")} ({log.blue("ip")}|{log.blue("route")})
+{log.colorize("Usage:", "cyan")} {log.colorize(argv[0] + " c")} ({log.colorize("ip", "blue")}|{log.colorize("route", "blue")})
 
-    {log.blue("ip:")}       Configure IP
-    {log.blue("route:")}    Configure Routing""")
+    {log.colorize("ip:", "blue")}       Configure IP
+    {log.colorize("route:", "blue")}    Configure Routing""")
 
 
     elif code == 5:
         print(f"""
-{log.cyan("Usage:")} {log.orange(argv[0] + " " + argv[2][0])} [{log.blue("INAME")}] """)
+{log.colorize("Usage:"," cyan")} {log.colorize(argv[0] + " " + argv[2][0])} [{log.colorize("INAME", "blue")}] """)
 
 
 
@@ -144,7 +158,7 @@ def exec(cmd):
 
     @return None    Fonction de type void
 """
-def show_interface(interface, show_ipv6):
+def display_interface(interface, show_ipv6):
     
     # On vérifie que l'interface existe
     if(not interface in ALL_INTERFACES):
@@ -152,28 +166,39 @@ def show_interface(interface, show_ipv6):
         quit()
 
     # On recupère l'adresse MAC
-    mac_addr = exec(f"ip a s {interface} | grep -Eo '..:..:..:..:..:..' | head -1")
+    mac_addr = netifaces.ifaddresses(interface)[netifaces.AF_LINK][0]["addr"]
     
     # On recupère les différentes adresses IPv4
-    ip = exec(f"ip a s {interface} | grep -Eo 'inet .*/..'").replace("inet ", "")
+    addresses = netifaces.ifaddresses(interface).get(socket.AF_INET)
 
     # On affiche joliment l'adresse MAC
-    print(log.orange("\n+-------- MAC --------+"), 
-          log.orange("\n|  ") + log.cyan(mac_addr) + log.orange("  |"),
-          log.orange("\n+---------------------+") + "\n")
+    print(log.colorize("\n+-------- MAC --------+"), 
+          log.colorize("\n|  ") + log.colorize(mac_addr, "cyan") + log.colorize("  |"),
+          log.colorize("\n+---------------------+") + "\n")
 
     # Et on affiche les IPv4 dans une sorte de tableau
-    print(log.orange("+-------- IPv4 --------+"))
-    for my_ip in ip.split():
-        print(log.orange("|") + my_ip.center(22).replace("/", log.purple_without_end("/")) + log.orange("|"))
-    print(log.orange("+----------------------+"))
+    print(log.colorize("+-------- IPv4 --------+"))
+    for ip in addresses:
+        mask = get_cidr_notation(ip['netmask'])
+        print(log.colorize("|") + (ip['addr'] + "/" + mask).center(22).replace(f"/{mask}", log.colorize(f"/{mask}", "purple")) + log.colorize("|"))
+    print(log.colorize("+----------------------+\n"))
     
     # On affiche éventuellement les ipv6
     if(len(argv) >= 5 and argv[4] in ["6", "-6"] or show_ipv6):
-        # On recupère les adresses ipv6 sous forme d'une chaine de caractères
-        ipv6 = exec(f"ip a s {interface} | grep -Eo 'inet6 .*/...'").replace("inet6 ", "")
-        # Et on l'affiche
-        print("\n" + ipv6.replace("/", log.purple_without_end("/")))
+        # On recupère les adresses ipv6 sous forme d'un tableau
+        ipv6_addresses = netifaces.ifaddresses(interface).get(netifaces.AF_INET6)
+        
+        print(log.colorize("+------------------- IPv6 -------------------+"))
+        for ipv6_address in ipv6_addresses:
+            
+            # On récupere le prefix
+            prefix = ipv6_address['netmask'].split("::")[1]
+            # Notre ipv6 sera comme ceci : ipv6/prefix
+            ipv6 = ipv6_address['addr'].split("%")[0] + prefix
+            # On colorize après avoir centré, car colorizer ajoute des caractères que center() tentera de centrer aussi
+            print(log.colorize("| ") + ipv6.center(42).replace(prefix, log.colorize(prefix, "purple")) + log.colorize(" |"))
+        print(log.colorize("+--------------------------------------------+\n"))
+
 
 
 
@@ -183,24 +208,19 @@ def show_interface(interface, show_ipv6):
     @return None    Fonction de type void
 """
 def show_route():
-    print(log.orange("\nDestination         Gateway           Interface"))
+    print(log.colorize("\nDestination         Gateway           Interface"))
 
     routes = exec('route -n | grep -Eo "([0-9]*\.){3}[0-9]"').split("\n")
     interfaces = exec('route -n | grep " [A-Za-z0-9]*$" -o').split(" ")[2:]
 
     for i in range(0, len(routes), 3):
-        list_mask = routes[i+2].split(".") 
-        processing = list()
-        for octet in list_mask:
-            processing.append(str(bin(int(octet))).count("1")) 
-
-        mask = str(sum(processing))
+        mask = get_cidr_notation(routes[i+2])
 
         print(
             routes[i] + 
-            log.purple("/" + mask) + 
+            log.colorize("/" + mask, "purple") + 
             " " * (20 - len(routes[i] + "/" + mask)) + 
-            log.cyan(routes[i+1]) + 
+            log.colorize(routes[i+1], "cyan") + 
             " " * (18 - len(routes[i+1])) +
             interfaces[int(i/3)].strip().center(8),
         )
@@ -219,7 +239,7 @@ def ip_config(interface):
     try:
         while True:
             # On affiche le prompt "iname (ip) > " en couleur
-            print(log.orange(interface) + log.blue(" (ip)") + " > ", end="")
+            print(log.colorize(interface) + log.colorize(" (ip)", "blue") + " > ", end="")
             # On recupère l'entrée utilisateur qu'on split
             command_ip = input().split()
 
@@ -232,7 +252,7 @@ def ip_config(interface):
 
             # On affiche un message d'aide sommaire
             if command in [ "h", "help", "ls"]:
-                print(f"""{ log.cyan("add") }, { log.cyan("del") }, { log.cyan("up") }, { log.cyan("down") }""")
+                print(f"""{ log.colorize("add", "cyan") }, { log.colorize("del", "cyan") }, { log.colorize("up", "cyan") }, { log.colorize("down", "cyan") }""")
 
             # Si add commence par la commande entrée par l'utilisateur -> si un utilisateur entre a
             # add commence par a, donc on rentre dans le if  
@@ -278,7 +298,7 @@ def route_config(interface):
         while True:
 
             # On affiche le prompt "iname (route) > " en couleur
-            print(log.orange(interface) + log.blue(" (route)") + " > ", end="")
+            print(log.colorize(interface) + log.colorize(" (route)", "blue") + " > ", end="")
 
             # On recupère l'entrée utilisateur qu'on splt
             command_ip = input().split()
@@ -292,7 +312,7 @@ def route_config(interface):
 
             # On affiche un message d'aide sommaire
             if command in [ "h", "help", "ls"]:
-                print(f"""{ log.cyan("add") }, { log.cyan("del") }""")
+                print(f"""{ log.colorize("add", "cyan") }, { log.colorize("del", "cyan") }""")
 
             # Si add commence par la commande entrée par l'utilisateur -> si un utilisateur entre a
             # add commence par a, donc on rentre dans le if  
@@ -401,10 +421,10 @@ def show_information():
                 else:
                     ipv6 = False
 
-                show_interface(action, ipv6)
+                display_interface(action, ipv6)
 
             else:
-                show_interface(argv[3], False)
+                display_interface(argv[3], False)
         
         # Sinon si c'est la route que l'on souhaite afficher
         elif "route".startswith(argv[2].lower()):
