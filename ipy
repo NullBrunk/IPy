@@ -254,7 +254,9 @@ def ip_config(interface):
             # On affiche un message d'aide sommaire
             if command in [ "h", "help", "ls"]:
                 print(f"""{ log.colorize("add", "cyan") }, { log.colorize("del", "cyan") }, { log.colorize("up", "cyan") }, { log.colorize("down", "cyan") }""")
-
+            elif command in ["exit", "quit", "q", "bye"]:
+                break
+                
             # Si add commence par la commande entrée par l'utilisateur -> si un utilisateur entre a
             # add commence par a, donc on rentre dans le if  
             elif "add".startswith(command):
@@ -314,6 +316,8 @@ def route_config(interface):
             # On affiche un message d'aide sommaire
             if command in [ "h", "help", "ls"]:
                 print(f"""{ log.colorize("add", "cyan") }, { log.colorize("del", "cyan") }""")
+            elif command in ["exit", "quit", "q", "bye"]:
+                break
 
             # Si add commence par la commande entrée par l'utilisateur -> si un utilisateur entre a
             # add commence par a, donc on rentre dans le if  
