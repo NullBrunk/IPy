@@ -13,6 +13,13 @@
 
 </div>
 
+# ⚒️ Installation
+```bash
+git clone https://github.com/NullBrunk/IPy && cd IPy
+pip3 install -r requirements.txt
+python3 ipy
+```
+
 # 💻 Usage 
 
 ### Show mode : IP
@@ -53,12 +60,4 @@ All notable changes to this project will be documented in this file.
 - Refactored the log class
 ```
  
-# ⚒️ Installation
-```bash
-git clone https://github.com/NullBrunk/IPy
-cd IPy
-pip3 install -r requirements.txt
-chmod +x ipy
-./ipy
-```
 
