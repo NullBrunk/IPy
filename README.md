@@ -51,7 +51,7 @@ python3 ipy
 
 # 📖 Changelog
 
-> [!WARNING]
+> [!IMPORTANT]
 > All notable changes to this project will be documented in this file.
 
 ```bash
