@@ -24,27 +24,27 @@ python3 ipy
 
 ### Show mode : IP
 > [!NOTE]
-> **This mode allows you to display a variety of information related to a given interface. You can provide the interface via CLI or by interactively selecting it from a list.**
+> This mode allows you to display a variety of information related to a given interface. You can provide the interface via CLI or by interactively selecting it from a list.
 
 ![show_mode_ip](https://github.com/NullBrunk/IPy/assets/125673909/5da86a4c-cdb0-414c-8aa6-d873ca4e5cde)
 
 ### Show mode : ROUTE
 > [!NOTE]
-> **This mode allows you to display the routes in a nice format.**
+> This mode allows you to display the routes in a nice format.
 
 ![image](https://github.com/NullBrunk/IPy/assets/125673909/ce1d2c97-02ec-4780-a132-d9c23efc34c2)
 
 
 ### Config mode : IP
 > [!NOTE]
-> **This mode allows you to UP/DOWN the interface or ADD/DELL an ip (v4 or v6), on a given interface. You can provide the interface via CLI, or by interactively selecting it from a list.**
+> This mode allows you to UP/DOWN the interface or ADD/DELL an ip (v4 or v6), on a given interface. You can provide the interface via CLI, or by interactively selecting it from a list.
 
 ![config_mode_ip](https://github.com/NullBrunk/IPy/assets/125673909/940bca59-5797-4fc9-a9c2-1843a10ba855)
 
 
 ### Config mode : ROUTE
 > [!NOTE]
-> **This mode allows you to ADD/DEL a Route on a given interface. You can provide the interface via CLI, or by interactively selecting it from a list.**
+> This mode allows you to ADD/DEL a Route on a given interface. You can provide the interface via CLI, or by interactively selecting it from a list.
 
 ![route_mode](https://github.com/NullBrunk/IPy/assets/125673909/9ff3bd4b-42d8-4efc-a0c4-b5a4f1b976ea)
 
